@@ -1,4 +1,4 @@
-﻿; Tower Defense macro by Escuminac#1856
+; Tower Defense macro by Escuminac#1856
 ; byfron v1.01
 
 #SingleInstance Force
@@ -213,16 +213,11 @@ byf_activeGui() {
 byf_reloadGui() {
 	Gui Submit, NoHide
 	; checks if any global variable is different from the one in "config.ini", reloading the script if true
-	globalVarsToCheck := ["webhooksScreenshots", "GuiTheme", "webhooksEnabled", "alwaysOnTop", "privateServerLink", "webhookLink", "chosenWave"]
+	globalVarsToCheck := ["webhooksScreenshots", "GuiTheme", "webhooksEnabled", "alwaysOnTop", "chosenWave"]
 	For each, globalName in globalVarsToCheck {
 		keyToCheck := "settings_" globalName
-		If (globalName == "webhookLink") or (globalName == "privateServerLink") {
-			varSection := "Links"
-		} else {
-			varSection := "Preferences"
-		}
 		globalValue := %globalName%
-		IniRead, valueToCompare, %A_ScriptDir%\settings\config.ini, %varSection%, %keyToCheck%
+		IniRead, valueToCompare, %A_ScriptDir%\settings\config.ini, Preferences, %keyToCheck%
 		If (valueToCompare != globalValue)  {
 			MsgBox, 0, byfron, Restarting macro to use new setting "%globalValue%" for  "%globalName%"
 			byf_updateConfig()
@@ -481,13 +476,13 @@ byf_startWave() {
 			Click, Left
 			Return True
 		}
+	Sleep, 300
+	Click, Left
 }
 
 ; calculates hourly crackers, based on time spent on a specific wave
 byf_hourlyStats() {
 	Loop, 10 {
-		Send, b
-		Sleep, 690
 		if (byf_startWave()) {
 			byf_statusLog("Wave " %chosenWave% "started")
 			Break
@@ -496,18 +491,19 @@ byf_hourlyStats() {
 	; wave : crackers amount
 	crackersPerWave := {20: 0.73, 21: 0.8, 22: 0.88, 23: 0.97, 24: 1.07, 25:1.18, 26: 1.3, 27: 1.43, 28: 1.57, 29: 1.73, 30: 1.9}
 	wavesCracker := crackersPerWave[chosenWave]
-	timeStart := A_NowUTC
+	hourlyStart := A_NowUTC
 	Loop, 6969 {
 		ImageSearch,,, 0, 0, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\waves.png
 		If (ErrorLevel == 0) {
+			hourlyEnd := A_NowUTC
 			byf_statusLog("Wave finished, calculating hourly")
 			Break
 		}
 		byf_checkConnection()
 	} 
-	EnvSub, timeEnd, timeStart, Seconds
-	timeEnd -= 1
-	wavesHour := Round(3600 / timeEnd)
+	EnvSub, hourlyEnd, hourlyStart, Seconds
+	hourlyEnd -= 1
+	wavesHour := Round(3600 / hourlyEnd)
 	modifiersCrackers := 1
 	if (robloxPremium) {
 		modifiersCrackers *= 1.15
@@ -516,7 +512,7 @@ byf_hourlyStats() {
 		modifiersCrackers *= 1.5
 	}
 	crackersHour := ((wavesHour * wavesCracker) * modifiersCrackers)
-	byf_statusLog("**Hourly Crackers**\nTotal Hourly: " crackersHour "\nWave " chosenWave " in " timeEnd " seconds")
+	byf_statusLog("**Hourly Crackers**\nTotal Hourly: " crackersHour "\nWave " chosenWave " in " hourlyEnd " seconds")
 	Reload
 }
 
@@ -764,7 +760,8 @@ ExitApp
 ;gets the mouse coordinates of some stuff
 FirstTime:
 MsgBox, 0, byfron, Please position your mouse on the specified menu buttons:, 12
-MsgBox, 0, byfron, Position your mouse on your preferred save to load in 10 seconds:, 10
+MsgBox, 0, byfron, Position your mouse on your preferred save to load in 10 seconds:, 3
+Sleep, 7000
 MouseGetPos, saveX, saveY
 byf_updateConfig()
 MsgBox, 0, byfron, Complete!
