@@ -258,33 +258,36 @@ byf_reconnect() {
 		Sleep, 1420
 		WinActivate, ahk_exe Brave.exe
 		Loop, 400 {
-			ImageSearch, erroryesX, erroryesY, 0, 0, A_ScreenWidth, A_ScreenHeight, *78 settings\images\erroryes.png
-			If (ErrorLevel == 0) {
-				MouseMove, erroryesX, erroryesY
-				Click, Left
-			}
+			byf_clickError()
 			Sleep, 500
 			If WinExist("ahk_exe RobloxPlayerBeta.exe") {
 				WinActivate, ahk_exe RobloxPlayerBeta.exe
 				If (byf_CheckConnection(false)) {
 					byf_screenAndSend()
-					byf_statusLog("Reconnection Confirmed")
+					byf_statusLog("Reconnection Confirmed" %A_Index%)
 					Sleep, 60000
-					; loops thrice, or until it works
-					Loop, 3 {
-						If (byf_reconnectLoad) {
-							Return 
-						}
+					reconnectOut:= byf_reconnectLoad()
+					if (reconnectOut) {
+						Return True
 					}
+					
 				} 
 			}
 		}
 	}	
 }
 
+;clicks error buttons
+byf_clickError() {
+	ImageSearch, erroryesX, erroryesY, 0, 0, A_ScreenWidth, A_ScreenHeight, *78 settings\images\erroryes.png
+	If (ErrorLevel == 0) {
+		MouseMove, erroryesX, erroryesY
+		Click, Left
+	}
+}
 ; loads saves and joins red team
 byf_reconnectLoad() {
-	Sleep, 8000
+	WinActivate, ahk_exe RobloxPlayerBeta.exe
 	ImageSearch, teamButtonX, teamButtonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\teambutton.png
 	If (ErrorLevel == 0) {
 		MouseMove, teamButtonX, teamButtonY, 8
