@@ -485,27 +485,30 @@ byf_startWave() {
 
 ; calculates hourly crackers, based on time spent on a specific wave
 byf_hourlyStats() {
+	WinActivate, Roblox ahk_exe RobloxPlayerBeta.exe
 	Loop, 10 {
-		if (byf_startWave()) {
-			byf_statusLog("Wave " %chosenWave% "started")
+		Send, b
+		Sleep, 690
+		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+		If (ErrorLevel == 0) {
+			MouseMove, waveX, waveY
+			Click, Left
+			hourlyStart := A_NowUTC
+			byf_statusLog("Wave " chosenWave " started")
+			Sleep, 3600
 			Break
 		}
 	}
-	; wave : crackers amount
-	crackersPerWave := {20: 0.73, 21: 0.8, 22: 0.88, 23: 0.97, 24: 1.07, 25:1.18, 26: 1.3, 27: 1.43, 28: 1.57, 29: 1.73, 30: 1.9}
-	wavesCracker := crackersPerWave[chosenWave]
-	hourlyStart := A_NowUTC
 	Loop, 6969 {
-		ImageSearch,,, 0, 0, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\waves.png
-		If (ErrorLevel == 0) {
+		ImageSearch,,, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\waveend.png
+		If (ErrorLevel != 0) {
 			hourlyEnd := A_NowUTC
 			byf_statusLog("Wave finished, calculating hourly")
 			Break
 		}
-		byf_checkConnection()
 	} 
 	EnvSub, hourlyEnd, hourlyStart, Seconds
-	hourlyEnd -= 1
+	hourlyEnd -= 0.2
 	wavesHour := Round(3600 / hourlyEnd)
 	modifiersCrackers := 1
 	if (robloxPremium) {
@@ -514,9 +517,12 @@ byf_hourlyStats() {
 	if (robloxCrackersGamepass) {
 		modifiersCrackers *= 1.5
 	}
+	crackersPerWave := {20: 0.73, 21: 0.8, 22: 0.88, 23: 0.97, 24: 1.07, 25:1.18, 26: 1.3, 27: 1.43, 28: 1.57, 29: 1.73, 30: 1.9}
+	wavesCracker := crackersPerWave[chosenWave]
 	crackersHour := ((wavesHour * wavesCracker) * modifiersCrackers)
 	byf_statusLog("**Hourly Crackers**\nTotal Hourly: " crackersHour "\nWave " chosenWave " in " hourlyEnd " seconds")
-	Reload
+	SB_SetText("Status: Hourly stats finished")
+	MsgBox Hourly Crackers: %crackersHour%
 }
 
 ; releases all held keys / mouse
@@ -750,6 +756,7 @@ $F3::
 $F4::
 {
 	byf_hourlyStats()
+	Return
 }
 
 ;g-labels
