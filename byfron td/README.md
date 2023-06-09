@@ -4,6 +4,7 @@
 - Macros chosen waves (only waves 20-30), and reconnects if disconnected
 - GUI with input 
 - Send reports to your webhook every ~5 minutes
+- Option to open a lunchbox every ~15 minutes
 - Reconnection to a private server loads your chosen save, and joins the red team if available
 
 ## Hotkeys
