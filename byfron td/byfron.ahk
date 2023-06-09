@@ -31,6 +31,8 @@ global saveX := 548
 global saveY := 544
 global openCrates := 0
 global GuiTheme := "MacLion3"
+global carbonX := 548
+global carbonY := 544
 
 ; configuration 
 
@@ -56,6 +58,8 @@ settings_robloxCrackersGamepass=0
 settings_runTime=0
 settings_saveX=548
 settings_saveY=544
+settings_carbonX=548
+settings_carbonY=544
 ), %A_ScriptDir%\settings\config.ini
 }
 
@@ -76,6 +80,8 @@ byf_updateGlobals() {
 	IniRead, runTime, %A_ScriptDir%\settings\config.ini, Stats, settings_runTime
 	IniRead, saveX, %A_ScriptDir%\settings\config.ini, Stats, settings_saveX
 	IniRead, saveY, %A_ScriptDir%\settings\config.ini, Stats, settings_saveY
+	IniRead, carbonX, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonX
+	IniRead, carbonY, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonY
 	
 }
 
@@ -93,6 +99,8 @@ byf_updateConfig() {
 	IniWrite, %runTime%, %A_ScriptDir%\settings\config.ini, Stats, settings_runTime
 	IniWrite, %saveX%, %A_ScriptDir%\settings\config.ini, Stats, settings_saveX
 	IniWrite, %saveY%, %A_ScriptDir%\settings\config.ini, Stats, settings_saveY
+	IniWrite, %carbonX%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonX
+	IniWrite, %carbonY%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonY
 }
 
 ; tray settings
@@ -268,7 +276,7 @@ byf_reconnect() {
 					Sleep, 60000
 					reconnectOut:= byf_reconnectLoad()
 					if (reconnectOut) {
-						Return True
+						Return
 					}
 					
 				} 
@@ -381,30 +389,26 @@ byf_openCrateCF() {
 	If !(openCrates) {
 		Return
 	}
-	ImageSearch, crateX, crateY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\crate.png
+	ImageSearch, crateX, crateY, 0, 0, A_ScreenWidth, A_ScreenHeight, *80 %A_ScriptDir%\settings\images\crate.png
 	If (ErrorLevel == 0) {
 		MouseMove, crateX, crateY, 8
 		Click, Left
 		Sleep, 2000
-	} else {
-		Return
-	}
-	SendInput {WheelDown 5}
-	ImageSearch, carbonX, carbonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\carbon.png
-	If (ErrorLevel == 0) {
-		MouseMove, carbonX, carbonY, 8
-		Click, Left
-		Sleep, 2000
-	} else {
-		Return
-	}
-	ImageSearch, openX, openY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\openbox.png
+	} 
+	MouseMove, saveX, saveY
+	Click, Left
+	SendInput {WheelUp 1}
+	Sleep, 1600
+	SendInput {WheelDown 1}
+	Sleep, 1600
+	MouseMove, carbonX, carbonY, 8
+	Click, Left
+	Sleep, 1690
+	ImageSearch, openX, openY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\open.png
 	If (ErrorLevel == 0) {
 		MouseMove, openX, openY, 8
 		Click, Left
-	} else {
-		Return
-	}
+	} 
 	Loop, 30 {
 		Click, Left
 		Sleep, 10
@@ -445,7 +449,7 @@ byf_statusLog(status) {
 ; sends a screenshot of your screen to the webhook
 byf_screenAndSend() {
 	If !(webhooksScreenshots) or !(webhooksEnabled) {
-		Return False
+		Return
 	}
 	Try {
 		Screen()
@@ -477,7 +481,7 @@ byf_startWave() {
 			MouseMove, waveX, waveY
 			Sleep, 450
 			Click, Left
-			Return True
+			Return
 		}
 	Sleep, 300
 	Click, Left
@@ -770,12 +774,17 @@ ExitApp
 ;gets the mouse coordinates of some stuff
 FirstTime:
 MsgBox, 0, byfron, Please position your mouse on the specified menu buttons:, 12
-MsgBox, 0, byfron, Position your mouse on your preferred save to load in 10 seconds:, 3
+MsgBox, 0, byfron, Position your mouse on your preferred save to load in 10 seconds:, 2
 Sleep, 7000
+Click, Left
 MouseGetPos, saveX, saveY
+MsgBox, 0, byfron, Position your mouse on your preferred lunchbox to open in 10 seconds:, 2
+Sleep, 7000
+Click, Left
+MouseGetPos, carbonX, carbonY
 byf_updateConfig()
 MsgBox, 0, byfron, Complete!
-Return
+Reload
 
 ;enableds/disables opening crates, and displays info
 OpenCrateMenu:
