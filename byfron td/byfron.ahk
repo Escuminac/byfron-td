@@ -296,12 +296,8 @@ byf_clickError() {
 ; loads saves and joins red team
 byf_reconnectLoad() {
 	WinActivate, ahk_exe RobloxPlayerBeta.exe
-	ImageSearch, teamButtonX, teamButtonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\teambutton.png
-	If (ErrorLevel == 0) {
-		MouseMove, teamButtonX, teamButtonY, 8
-		Click, Left
-		Sleep, 2500
-	}
+	Send v
+	Sleep, 2500
 	ImageSearch, redX, redY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\redteam.png
 	If (ErrorLevel == 0) {
 		MouseMove, redX, redY, 8
@@ -313,20 +309,13 @@ byf_reconnectLoad() {
 		MouseMove, joinTeamX, joinTeamY, 8
 		Click, Left
 		Sleep, 2000
+	} else {
+		Return False
 	}
-	ImageSearch, teamButtonX, teamButtonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\teambutton.png
-	If (ErrorLevel == 0) {
-		MouseMove, teamButtonX, teamButtonY, 8
-		Click, Left
-		Sleep, 2000
-	}
-	; insert code that detects players / which save to load
-	ImageSearch, savesMenuButtonX, savesMenuButtonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\savesMenuButton.png
-	If (ErrorLevel == 0) {
-		MouseMove, savesMenuButtonX, savesMenuButtonY, 8
-		Click, Left
-		Sleep, 3500
-	}
+	byf_closeMenus()
+	Sleep, 2500
+	Send c
+	Sleep, 2500
 	MouseMove, saveX, saveY, 8
 	Click, Left
 	Sleep, 2000
@@ -335,21 +324,15 @@ byf_reconnectLoad() {
 		MouseMove, loadsavesX, loadsavesY, 8
 		Click, Left
 		Sleep, 2000
-	}
-	ImageSearch, savesMenuButtonX, savesMenuButtonY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\savesMenuButton.png
-	If (ErrorLevel == 0) {
-		MouseMove, savesMenuButtonX, savesMenuButtonY, 8
-		Click, Left
-		Sleep, 2000
-		byf_statusLog("Reconnection finished")
-		byf_screenAndSend()
-		MouseMove, 1000, 300, 8
-		Send {Text} /:weary: byfron pro [%A_Hour%:%A_Min%] `n
-		Return True
 	} else {
 		Return False
 	}
-		
+	byf_closeMenus()
+	byf_statusLog("Reconnection finished")
+	byf_screenAndSend()
+	MouseMove, 1000, 300, 8
+	Send {Text} /:weary: byfron pro [%A_Hour%:%A_Min%] `n
+	Return True	
 }
 
 ; checks if you're connected to tower defense 
@@ -389,14 +372,11 @@ byf_openCrateCF() {
 	If !(openCrates) {
 		Return
 	}
-	ImageSearch, crateX, crateY, 0, 0, A_ScreenWidth, A_ScreenHeight, *80 %A_ScriptDir%\settings\images\crate.png
-	If (ErrorLevel == 0) {
-		MouseMove, crateX, crateY, 8
-		Click, Left
-		Sleep, 2000
-	} 
+	Send z
+	Sleep, 2000
 	MouseMove, saveX, saveY
 	Click, Left
+	Sleep, 500
 	SendInput {WheelUp 1}
 	Sleep, 1600
 	SendInput {WheelDown 1}
@@ -409,10 +389,12 @@ byf_openCrateCF() {
 		MouseMove, openX, openY, 8
 		Click, Left
 	} 
-	Loop, 30 {
+	Loop, 28 {
 		Click, Left
-		Sleep, 10
+		Sleep, 144
 	}
+	byf_closeMenus()
+	byf_statusLog("Lunchbox opened")
 	byf_screenAndSend()
 
 }
@@ -475,7 +457,7 @@ byf_farmWaves() {
 ; starts the chosen wave
 byf_startWave() {
 	Send, b
-	Sleep, 690
+	Sleep, 1420
 	ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
 		If (ErrorLevel == 0) {
 			MouseMove, waveX, waveY
@@ -483,8 +465,15 @@ byf_startWave() {
 			Click, Left
 			Return
 		}
-	Sleep, 300
 	Click, Left
+}
+
+; closes menu if open
+byf_closeMenus() {
+	Sleep, 500
+	Send b 
+	Sleep, 500
+	Send b
 }
 
 ; calculates hourly crackers, based on time spent on a specific wave
@@ -709,7 +698,9 @@ Class CreateFormData {
 ; start, main loop
 $F1::
 {
+	byf_openCrateCF()
 	Start:
+	WinSet, Transparent, 100, byfron
 	Critical, Off
 	byf_checkConnection()
 	MouseMove, 1000, 300, 8
@@ -733,11 +724,14 @@ $F1::
 $F2:: 
 {
 	Stop:
+	WinSet, Transparent, 255, byfron
 	byf_releaseAll()
 	byf_updateRunTime()
 	If (A_IsPaused) {
 		WinActivate, Roblox ahk_exe RobloxPlayerBeta.exe
 		SB_SetText("Status: Unpaused")
+		WinSet, Transparent, 100, byfron
+		MouseMove, 1000, 300, 8
 	} else {
 		SB_SetText("Status: Paused, F2 to continue")
 	}
@@ -789,12 +783,12 @@ Reload
 ;enableds/disables opening crates, and displays info
 OpenCrateMenu:
 If !(openCrates) {
-	MsgBox, 4, byfron, Description: `nOpens a carbon fiber crate ~ every 15 minutes if possible`n`nEnable?
+	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 15 minutes if possible`n`nEnable?
 	IfMsgBox Yes 
 		openCrates := 1
 		byf_updateConfig()
 } else {
-	MsgBox, 4, byfron, Description: `nOpens a carbon fiber crate ~ every 15 minutes if possible`n`nDisable?
+	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 15 minutes if possible`n`nDisable?
 	IfMsgBox Yes 
 		openCrates := 0
 		byf_updateConfig()
@@ -823,7 +817,9 @@ Return
 ;deletes config.ini and makes a new one
 ResetConfiguration:
 MsgBox, 4, byfron, Reset all settings?
-IfMsgBox Yes 
+IfMsgBox No
+	Return 
+Else {
 	FileDelete, %A_ScriptDir%\settings\config.ini
 	webhookLink := "DiscordWebhook:"
 	privateServerLink := "RobloxPrivateServer:"
@@ -837,32 +833,14 @@ IfMsgBox Yes
 	startTime := A_NowUTC
 	saveX := 548
 	saveY := 544
+	carbonX := 548
+	carbonY := 544
 	openCrates := 0
 	GuiTheme := "MacLion3"
-	FileAppend, 
-(
-[Links]
-settings_webhookLink=DiscordWebhook:
-settings_privateServerLink=RobloxPrivateServer:
-
-[Preferences]
-settings_chosenWave=29
-settings_alwaysOnTop=1
-settings_webhooksEnabled=1
-settings_webhooksScreenshot=1
-settings_openCrates=0
-settings_GuiTheme=MacLion3
-
-[Stats]
-settings_robloxPremium=0
-settings_robloxCrackersGamepass=0
-settings_runTime=0
-settings_saveX=548
-settings_saveY=544
-), %A_ScriptDir%\settings\config.ini
 	Gui Destroy
 	Reload
-Return
+	Return
+}
 
 ;funis
 PayToWin:
