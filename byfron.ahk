@@ -147,7 +147,7 @@ Gui Add, Button, gEnd x180 y96 w60 h21, End (F3)
 Gui Add, Button, gStop x100 y96 w60 h21, Pause (F2)
 Gui Add, Button, gStart x20 y96 w60 h21, Start (F1)
 Gui Add, Text, x21 y65 w39 h14 , Wave:
-Gui Add, Text, x201 y25 w39 h14 , v1.01
+Gui Add, Text, x201 y25 w39 h14 , v1.02
 Gui Add, Text, x21 y29 w99 h14 , Escuminac#1856
 Gui Add, Edit, vchosenWave x62 y65 w69 h14 +0x2000, %chosenWave%
 Gui Add, UpDown, Range20-30 Wrap 0x100, %chosenWave%
