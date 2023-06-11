@@ -1,4 +1,4 @@
-﻿; Tower Defense macro by Escuminac#1856
+; Tower Defense macro by Escuminac#1856
 ; byfron v1.01
 
 #SingleInstance Force
@@ -147,7 +147,7 @@ Gui Add, Button, gEnd x180 y96 w60 h21, End (F3)
 Gui Add, Button, gStop x100 y96 w60 h21, Pause (F2)
 Gui Add, Button, gStart x20 y96 w60 h21, Start (F1)
 Gui Add, Text, x21 y65 w39 h14 , Wave:
-Gui Add, Text, x201 y25 w39 h14 , v1.02
+Gui Add, Text, x201 y25 w39 h14 , v1.01
 Gui Add, Text, x21 y29 w99 h14 , Escuminac#1856
 Gui Add, Edit, vchosenWave x62 y65 w69 h14 +0x2000, %chosenWave%
 Gui Add, UpDown, Range20-30 Wrap 0x100, %chosenWave%
@@ -396,9 +396,9 @@ byf_openCrateCF() {
 		Click, Left
 		Sleep, 144
 	}
-	byf_closeMenus()
-	byf_statusLog("Lunchbox opened")
 	byf_screenAndSend()
+	byf_statusLog("Lunchbox opened")
+	byf_closeMenus()
 
 }
 
@@ -449,7 +449,7 @@ byf_farmWaves() {
 	byf_releaseAll()
 	byf_statusLog("Farming Started")
 	byf_screenAndSend()
-	Loop, 190 {
+	Loop, 210 {
 		byf_checkConnection()
 		byf_startWave()
 	}
@@ -460,8 +460,16 @@ byf_farmWaves() {
 byf_startWave() {
 	MouseMove, 1000, 300, 3
 	Send, b
-	Sleep, 360
-	Loop, 20 {
+	Sleep, 300
+	Loop, 5 {
+		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+		If (ErrorLevel == 0) {
+			MouseMove, waveX, waveY, 3
+			Sleep, 120
+			Click, Left
+			Sleep, 150
+			Click, Left
+		}
 		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
 		If (ErrorLevel == 0) {
 			MouseMove, waveX, waveY, 3
