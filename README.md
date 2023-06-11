@@ -1,4 +1,5 @@
 # byfron
+- pls dm me if u use it, especially if there are bugs
 
 ## Features
 - Macros chosen waves (only waves 20-30), and reconnects if disconnected
