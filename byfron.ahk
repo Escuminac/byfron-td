@@ -93,6 +93,8 @@ byf_updateConfig() {
 	IniWrite, %chosenWave%, %A_ScriptDir%\settings\config.ini, Preferences, settings_chosenWave
 	IniWrite, %alwaysOnTop%, %A_ScriptDir%\settings\config.ini, Preferences, settings_alwaysOnTop
 	IniWrite, %openCrates%, %A_ScriptDir%\settings\config.ini, Preferences, settings_openCrates
+	IniWrite, %webhooksEnabled%, %A_ScriptDir%\settings\config.ini, Preferences, settings_webhooksEnabled
+	IniWrite, %webhooksScreenshots%, %A_ScriptDir%\settings\config.ini, Preferences, settings_webhooksScreenshots
 	IniWrite, %GuiTheme%, %A_ScriptDir%\settings\config.ini, Preferences, settings_GuiTheme
 	IniWrite, %robloxPremium%, %A_ScriptDir%\settings\config.ini, Stats, settings_robloxPremium
 	IniWrite, %robloxCrackersGamepass%, %A_ScriptDir%\settings\config.ini, Stats, settings_robloxCrackersGamepass
@@ -554,7 +556,6 @@ byf_updateRunTime() {
 byf_exit() {
 	byf_releaseAll()
 	byf_updateRunTime()
-	Gui Destroy 
 }
 
 ; other functions (not by me)
