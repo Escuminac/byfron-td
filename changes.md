@@ -4,6 +4,9 @@
 - Support for more waves (Ice update?)
 - More generalized / reliable support for multiple screen sizes / resolutions
 
+## v1.03.1
+- Faster wave clicks
+- 💀
 ## v1.03
 - Added Byfron_Setup.pdf, which should help with setup
 - Optimized timing for carbon fiber crates
