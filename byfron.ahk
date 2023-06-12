@@ -1,4 +1,4 @@
-﻿; Tower Defense macro by Escuminac#1856
+; Tower Defense macro by Escuminac#1856
 ; byfron v1.01
 
 #SingleInstance Force
@@ -33,6 +33,8 @@ global openCrates := 0
 global GuiTheme := "MacLion3"
 global carbonX := 548
 global carbonY := 544
+global waveX
+global waveY
 
 ; configuration 
 
@@ -149,7 +151,7 @@ Gui Add, Button, gEnd x180 y96 w60 h21, End (F3)
 Gui Add, Button, gStop x100 y96 w60 h21, Pause (F2)
 Gui Add, Button, gStart x20 y96 w60 h21, Start (F1)
 Gui Add, Text, x21 y65 w39 h14 , Wave:
-Gui Add, Text, x201 y25 w39 h14 , v1.03
+Gui Add, Text, x201 y25 w39 h14 , v1.03.1
 Gui Add, Text, x21 y29 w99 h14 , Escuminac#1856
 Gui Add, Edit, vchosenWave x62 y65 w69 h14 +0x2000, %chosenWave%
 Gui Add, UpDown, Range20-30 Wrap 0x100, %chosenWave%
@@ -201,6 +203,7 @@ byf_updateRunTime()
 byf_traySettings()
 Gui Show, w250 h150 x1100 y60, byfron
 SkinForm(0)
+EmptyMem()
 Return
 
 ; disables and activates parts of gui during playback
@@ -408,9 +411,9 @@ byf_openCrateCF() {
 		MouseMove, openX, openY, 8
 		Click, Left
 	} 
-	Loop, 21 {
+	Loop, 25 {
 		Click, Left
-		Sleep, 124
+		Sleep, 80
 	}
 	byf_screenAndSend()
 	byf_statusLog("Lunchbox opened")
@@ -465,37 +468,75 @@ byf_farmWaves() {
 	byf_releaseAll()
 	byf_statusLog("Farming Started")
 	byf_screenAndSend()
-	Loop, 200 {
+	Loop, 175 {
 		byf_checkConnection()
 		byf_startWave()
 	}
 	byf_statusLog("Farming Ended")
 }
 
-; starts the chosen wave
+; starts the chosen wave bro this took too long
 byf_startWave() {
-	MouseMove, 1000, 300, 3
+	MouseMove, 1000, 300, 1
 	Send, b
-	Sleep, 300
+	Sleep, 115
+	Loop, 6 {
+		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *70 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+		If (ErrorLevel == 0) {
+			Sleep, 70
+			ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *73 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+			If (ErrorLevel == 0) {
+				Sleep, 30
+				ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *73 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+				If (ErrorLevel == 0) {
+					waveY += 12
+					waveX += 10
+					MouseMove, waveX, waveY, 3
+					Click, Left
+					Sleep, 30
+					Loop, 7 {
+						Click, Left
+						Sleep, 65
+					}
+				}
+			}	
+		} else { 
+			Sleep, 70
+			ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *70 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+			If (ErrorLevel == 0) {
+				Sleep, 70
+				ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *73 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+				If (ErrorLevel == 0) {
+					Sleep, 30
+					ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *73 %A_ScriptDir%\settings\images\wave%chosenWave%.png
+					If (ErrorLevel == 0) {
+						waveY += 12
+						waveX += 10
+						MouseMove, waveX, waveY, 3
+						Click, Left
+						Sleep, 30
+						Loop, 7 {
+							Click, Left
+							Sleep, 65
+						}
+					}	
+				}	
+			} 
+		}
+	}		
+}
+
+;uhm future failsafe... tbd
+byf_failClick() {
+	MouseMove, 883, 329, 2
+	Click, Left
+	Sleep, 30
 	Loop, 5 {
-		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
-		If (ErrorLevel == 0) {
-			MouseMove, waveX, waveY, 3
-			Sleep, 120
-			Click, Left
-			Sleep, 150
-			Click, Left
+		Click, Left
+		Sleep, 65
 		}
-		ImageSearch, waveX, waveY, 0, 0, A_ScreenWidth, A_ScreenHeight//2, *82 %A_ScriptDir%\settings\images\wave%chosenWave%.png
-		If (ErrorLevel == 0) {
-			MouseMove, waveX, waveY, 3
-			Sleep, 120
-			Click, Left
-			Sleep, 150
-			Click, Left
-		}
-		Sleep, 69
-	}
+	MouseMove, 1000, 300, 0
+	Sleep, 100
 }
 
 ; closes menu if open
@@ -573,6 +614,14 @@ byf_exit() {
 }
 
 ; other functions (not by me)
+
+;https://www.autohotkey.com/board/topic/30042-run-ahk-scripts-with-less-half-or-even-less-memory-usage/
+EmptyMem(PID="AHK Rocks"){
+    pid:=(pid="AHK Rocks") ? DllCall("GetCurrentProcessId") : pid
+    h:=DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", 0, "Int", pid)
+    DllCall("SetProcessWorkingSetSize", "UInt", h, "Int", -1, "Int", -1)
+    DllCall("CloseHandle", "Int", h)
+}
 
 ; by zez i think
 runWith(version){	
