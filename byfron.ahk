@@ -465,6 +465,7 @@ byf_openCrateCF() {
 	If !(openBox) {
 		Return
 	}
+	StatusLog("Opening Carbon fiber crate")
 	Send z
 	Sleep, 2000
 	MouseMove, saveX, saveY
@@ -539,12 +540,13 @@ byf_farmWaves() {
 	byf_releaseAll()
 	byf_statusLog("Farming Started")
 	byf_screenAndSend()
+	byf_openCrateCF()
 	Loop, 175 {
 		byf_manageReport()
 		byf_checkConnection()
 		byf_startWave()
-		byf_openCrateCF()
 	}
+	byf_openCrateCF()
 	byf_statusLog("Farming Ended")
 }
 
