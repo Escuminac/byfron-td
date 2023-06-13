@@ -108,7 +108,7 @@ byf_updateConfig() {
 	IniWrite, %carbonX%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonX
 	IniWrite, %carbonY%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonY
 }
-
+; e
 ; tray settings
 byf_traySettings() {
 	Menu, Tray, NoStandard
