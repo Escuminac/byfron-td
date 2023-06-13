@@ -1,4 +1,4 @@
 # License
 
 - imagine :skull:
-- pls no steal :pleading_eyes:
+- pls no steal :pray:

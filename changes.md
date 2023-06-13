@@ -2,7 +2,12 @@
 
 ## Upcoming
 - Support for more waves (Ice update?)
-- More generalized / reliable support for multiple screen sizes / resolutions
+
+## v1.05
+- Removed error dialogs / issues where script would exit if OCR failed
+- Opens lunchboxes when the cracker requirement is detected as met, rather than every 12 minutes
+- Welcome dialog on first startup
+- General script optimizations for long term usage
 
 ## v1.04
 - Improved, faster, click system

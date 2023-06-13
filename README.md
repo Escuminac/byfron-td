@@ -4,7 +4,7 @@
 - Macros chosen waves (only waves 20-30), and reconnects if disconnected
 - Sends hourly reports every hour with your crackers earned
 - Send reports to your webhook every ~5 minutes
-- Option to open a carbon fiber lunchbox every ~12 minutes
+- Option to open a carbon fiber lunchbox 
 - Reconnection to a private server loads your chosen save, and joins the red team if available
 
 ## Hotkeys

@@ -1,5 +1,7 @@
 ﻿; Toy Defense (Glacid) macro by Escuminac#1856
-; byfron v1.04
+; byfron v1.05
+
+; if you're reading this, you probably understand AHK, i also need a partner to collaborate lol
 
 #SingleInstance Force
 #MaxThreads 7
@@ -8,6 +10,7 @@
 #KeyHistory 0
 #Include %A_ScriptDir%\sub\Gdip_all.ahk
 #Include %A_ScriptDir%\sub\OCR.ahk
+#MaxThreads, 6
 
 SetBatchLines, -1
 SetDefaultMouseSpeed, 3
@@ -34,8 +37,7 @@ global openCrates := 0
 global GuiTheme := "MacLion3"
 global carbonX := 548
 global carbonY := 544
-global pastCrackers
-global nowCrackers
+global pastCrackers := 0
 global hourlySent := 0
 
 ; configuration 
@@ -67,7 +69,145 @@ settings_carbonY=544
 ), %A_ScriptDir%\settings\config.ini
 }
 
+; Gui
+Menu, Tray, Icon, %A_ScriptDir%\settings\images\buo.ico
+Menu, Tray, Tip, byfron
+byf_updateGlobals()
+OnExit("byf_exit")
+SkinForm("Apply", A_ScriptDir . "\settings\styles\USkin.dll", A_ScriptDir . "\settings\styles\" . GuiTheme . ".msstyles")
 
+Gui +Border +OwnDialogs
+If (AlwaysOnTop) {
+	Gui +AlwaysOnTop
+}
+Gui Font, s7 cDefault Norm, Tahoma
+Gui Font, w700
+Gui Add, Statusbar, x15 y75 w10 h60 BackgroundTrans,Status: Idle
+Gui Add, Tab3, x0 y0 w255 h150 -Wrap, Status||Settings|Misc|Configuration
+Gui Tab, 1
+Gui Add, Button, gEnd x180 y96 w60 h21, End (F3)
+Gui Add, Button, gStop x100 y96 w60 h21, Pause (F2)
+Gui Add, Button, gStart x20 y96 w60 h21, Start (F1)
+Gui Add, Text, x21 y65 w39 h14 , Wave:
+Gui Add, Text, x201 y25 w39 h14 , v1.05
+Gui Add, Text, x21 y29 w99 h14 , Escuminac#1856
+Gui Add, Edit, vchosenWave x62 y65 w69 h14 +0x2000, %chosenWave%
+Gui Add, UpDown, Range20-30 Wrap 0x100, %chosenWave%
+Gui Tab, 2
+Gui Add, Edit, vprivateServerLink x25 y25 w200 h14, %privateServerLink%
+If (AlwaysOnTop) {
+	Gui Add, CheckBox, valwaysOnTop -Wrap y110 x23 Checked, Always on top
+} else {
+	Gui Add, CheckBox, valwaysOnTop -Wrap y110 x23, Always on top
+}
+If (webhooksEnabled) {
+	Gui Add, Edit, vwebhookLink x25 y45 w200 h14, %webhookLink%
+	Gui Add, CheckBox, vwebhooksEnabled -Wrap y90 x23 Checked, Webhook Enabled
+} else {
+	Gui Add, CheckBox, vwebhooksEnabled -Wrap y90 x23, Webhook Enabled
+}
+If (webhooksScreenshots) {
+	Gui Add, CheckBox, vwebhooksScreenshots -Wrap y70 x23 Checked, Webhook Screenshots
+} else {
+	Gui Add, CheckBox, vwebhooksScreenshots -Wrap y70 x23, Webhook Screenshots
+}
+Gui Add, Button, gOpenCrateMenu x150 y96 w90 h21, Open Crates
+Gui Tab, 3
+Gui Add, Text, x20 y30 w150 h31, Hourly stats: (F4)
+Gui Add, Text, x20 y43 w150 h31, End macro: (F3)
+Gui Add, Text, x20 y56 w150 h31, Pause macro: (F2)
+Gui Add, Text, x20 y69 w150 h31, Start: (F1)
+Gui Add, Button, gReadMe x160 y30 w60 h21, Read me
+Gui Add, Button, gChangeLog x160 y60 w60 h21, Change log
+Gui Add, Button, gHelp x160 y90 w60 h21, Need help?
+Gui Add, Button, gResetConfiguration x20 y96 w110 h21, Reset all settings?
+Gui Tab, 4
+Gui Add, Text, x21 y30 w150 h31
+; p2w lmfao
+If (robloxPremium) {
+	Gui Add, CheckBox, gPayToWin vrobloxPremium -Wrap y54 x20 Checked, Roblox Premium
+} else {
+	Gui Add, CheckBox, gPayToWin vrobloxPremium -Wrap y54 x20, Roblox Premium
+}
+If (robloxCrackersGamepass) {
+	Gui Add, CheckBox, gPayToWin vrobloxCrackersGamepass -Wrap y74 x20 Checked, Crackers Gamepass
+} else {
+	Gui Add, CheckBox, gPayToWin vrobloxCrackersGamepass -Wrap y74 x20, Crackers Gamepass
+}
+Gui, Add, DropDownList, x150 y56 w90 h100 vGuiTheme gGuiSelect, %GuiTheme%||Ayofe|BluePaper|Concaved|Core|Cosmo|Fanta|GrayGray|Hana|Invoice|Lakrits|Luminous|MacLion3|Minimal|Museo|Panther|PaperAGV|Relapse|SNAS|Stomp|Woodwork
+; imagine not using MacLion3 :skull:
+Gui Add, Button, gFirstTime x20 y96 w130 h21, First Time Using?
+
+byf_updateRunTime()
+byf_traySettings()
+Gui Show, w250 h150 x1100 y60, byfron
+SkinForm(0)
+EmptyMem()
+
+byf_checkVersion()
+If (runTime == 0) {
+	MsgBox, 0, byfron, Welcome to Byfron !`nThis macro requires image calibration`nExplore the tabs to set up the macro, 100
+}
+Return
+
+; start up functions
+
+; compares byfron version
+byf_checkVersion() {
+	;https://www.autohotkey.com/boards/viewtopic.php?t=57994
+	FileRead, currentVersion, %A_ScriptDir%\version.txt
+	Try, {
+		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		whr.Open("GET", "https://raw.githubusercontent.com/Escuminac/byfron-td/main/settings/version.txt", true)
+		whr.Send()
+		; Using 'true' above and the call below allows the script to remain responsive.
+		whr.WaitForResponse() ;this is taken from the installer. Can also be located as an example on the urldownloadtofile page of the quick reference guide.
+		githubVersion := whr.ResponseText
+	}
+	If (githubVersion != currentVersion) && (githubVersion != "") {
+		MsgBox, 4, byfron, A new version %githubVersion% of Byfron is available! Download it?, 30
+		IfMsgBox Yes
+			Run, https://github.com/Escuminac/byfron-td
+	}
+}
+
+; disables and activates parts of gui during playback
+byf_activeGui() {
+	Control, TabLeft , 1, SysTabControl321
+	GuiControl, Disable, Edit1
+	GuiControl, Disable, Edit2
+	GuiControl, Disable, Edit3
+	GuiControl, Disable, msctls_dropdown321
+	GuiControl, Disable, Button4
+	GuiControl, Disable, Button5
+	GuiControl, Disable, Button6
+	GuiControl, Disable, Button7
+	GuiControl, Disable, Button8
+	GuiControl, Disable, Button9
+	GuiControl, Disable, Button10
+	GuiControl, Disable, Button11
+	GuiControl, Disable, Button12
+	GuiControl, Disable, ComboBox1
+}
+
+; checks if user has changed any settings, reloading if true
+byf_reloadGui() {
+	Gui Submit, NoHide
+	; checks if any global variable is different from the one in "config.ini", reloading the script if true
+	globalVarsToCheck := ["webhooksScreenshots", "GuiTheme", "webhooksEnabled", "alwaysOnTop", "chosenWave"]
+	For each, globalName in globalVarsToCheck {
+		keyToCheck := "settings_" globalName
+		globalValue := %globalName%
+		IniRead, valueToCompare, %A_ScriptDir%\settings\config.ini, Preferences, %keyToCheck%
+		If (valueToCompare != globalValue)  {
+			MsgBox, 0, byfron, Restarting macro to use new setting "%globalValue%" for  "%globalName%", 15
+			byf_updateConfig()
+			Reload
+		} 
+		
+	}
+	byf_activeGui()
+}
 
 ; updates globals based on provided values in config.ini
 byf_updateGlobals() {
@@ -108,7 +248,7 @@ byf_updateConfig() {
 	IniWrite, %carbonX%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonX
 	IniWrite, %carbonY%, %A_ScriptDir%\settings\config.ini, Stats, settings_carbonY
 }
-; e
+
 ; tray settings
 byf_traySettings() {
 	Menu, Tray, NoStandard
@@ -118,8 +258,7 @@ byf_traySettings() {
 	Menu, Tray, Add
 	Menu, Tray, Add, Suspend Hotkeys, byf_noHotkeys
 	Menu, Tray, Add
-	Menu, Tray, Add, Open Logs, byf_openLogs
-
+	Menu, Tray, Add, Open Console, byf_openLogs
 }
 
 ; disables all Hotkeys
@@ -133,174 +272,46 @@ byf_openLogs() {
 	ListLines
 }
 
-; Gui
-Menu, Tray, Icon, %A_ScriptDir%\settings\images\buo.ico
-Menu, Tray, Tip, byfron
-byf_updateGlobals()
-OnExit("byf_exit")
-SkinForm("Apply", A_ScriptDir . "\settings\styles\USkin.dll", A_ScriptDir . "\settings\styles\" . GuiTheme . ".msstyles")
-
-Gui +Border +OwnDialogs
-If (AlwaysOnTop) {
-	Gui +AlwaysOnTop
-}
-Gui Font, s7 cDefault Norm, Tahoma
-Gui Font, w700
-Gui Add, Statusbar, x15 y75 w10 h60 BackgroundTrans,Status: Idle
-Gui Add, Tab3, x0 y0 w255 h150 -Wrap, Status||Settings|Misc|Configuration
-Gui Tab, 1
-Gui Add, Button, gEnd x180 y96 w60 h21, End (F3)
-Gui Add, Button, gStop x100 y96 w60 h21, Pause (F2)
-Gui Add, Button, gStart x20 y96 w60 h21, Start (F1)
-Gui Add, Text, x21 y65 w39 h14 , Wave:
-Gui Add, Text, x201 y25 w39 h14 , v1.04
-Gui Add, Text, x21 y29 w99 h14 , Escuminac#1856
-Gui Add, Edit, vchosenWave x62 y65 w69 h14 +0x2000, %chosenWave%
-Gui Add, UpDown, Range20-30 Wrap 0x100, %chosenWave%
-Gui Tab, 2
-Gui Add, Edit, vprivateServerLink x25 y25 w200 h14, %privateServerLink%
-If (AlwaysOnTop) {
-	Gui Add, CheckBox, valwaysOnTop -Wrap y110 x23 Checked, Always on top
-} else {
-	Gui Add, CheckBox, valwaysOnTop -Wrap y110 x23, Always on top
-}
-If (webhooksEnabled) {
-	Gui Add, Edit, vwebhookLink x25 y45 w200 h14, %webhookLink%
-	Gui Add, CheckBox, vwebhooksEnabled -Wrap y90 x23 Checked, Webhook Enabled
-} else {
-	Gui Add, CheckBox, vwebhooksEnabled -Wrap y90 x23, Webhook Enabled
-}
-If (webhooksScreenshots) {
-	Gui Add, CheckBox, vwebhooksScreenshots -Wrap y70 x23 Checked, Webhook Screenshots
-} else {
-	Gui Add, CheckBox, vwebhooksScreenshots -Wrap y70 x23, Webhook Screenshots
-}
-Gui Add, Button, gOpenCrateMenu x150 y96 w90 h21, Open Crates
-Gui Tab, 3
-Gui Add, Text, x20 y30 w150 h31, Hourly stats: (F4)
-Gui Add, Text, x20 y43 w150 h31, End macro: (F3)
-Gui Add, Text, x20 y56 w150 h31, Pause macro: (F2)
-Gui Add, Text, x20 y69 w150 h31, Start: (F1)
-Gui Add, Button, gChangeLog x160 y30 w60 h21, Read me
-Gui Add, Button, gReadMe x160 y60 w60 h21, Change log
-Gui Add, Button, gHelp x160 y90 w60 h21, Need help?
-Gui Add, Button, gResetConfiguration x20 y96 w110 h21, Reset all settings?
-Gui Tab, 4
-Gui Add, Text, x21 y30 w150 h31
-; p2w lmfao
-If (robloxPremium) {
-	Gui Add, CheckBox, gPayToWin vrobloxPremium -Wrap y54 x20 Checked, Roblox Premium
-} else {
-	Gui Add, CheckBox, gPayToWin vrobloxPremium -Wrap y54 x20, Roblox Premium
-}
-If (robloxCrackersGamepass) {
-	Gui Add, CheckBox, gPayToWin vrobloxCrackersGamepass -Wrap y74 x20 Checked, Crackers Gamepass
-} else {
-	Gui Add, CheckBox, gPayToWin vrobloxCrackersGamepass -Wrap y74 x20, Crackers Gamepass
-}
-Gui, Add, DropDownList, x150 y56 w90 h100 vGuiTheme gGuiSelect, %GuiTheme%||Ayofe|BluePaper|Concaved|Core|Cosmo|Fanta|GrayGray|Hana|Invoice|Lakrits|Luminous|MacLion3|Minimal|Museo|Panther|PaperAGV|Relapse|SNAS|Stomp|Woodwork
-; imagine not using MacLion3 :skull:
-Gui Add, Button, gFirstTime x20 y96 w130 h21, First Time Using?
-
-byf_updateRunTime()
-byf_traySettings()
-Gui Show, w250 h150 x1100 y60, byfron
-SkinForm(0)
-EmptyMem()
-
-;https://www.autohotkey.com/boards/viewtopic.php?t=57994
-
-; Auto - Updater
-FileRead, currentVersion, %A_ScriptDir%\version.txt
-whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-whr.Open("GET", "https://raw.githubusercontent.com/Escuminac/byfron-td/main/version.txt", true)
-whr.Send()
-; Using 'true' above and the call below allows the script to remain responsive.
-whr.WaitForResponse() ;this is taken from the installer. Can also be located as an example on the urldownloadtofile page of the quick reference guide.
-version := whr.ResponseText
-If (version != currentVersion) {
-	MsgBox, 4, byfron, A new version v%version% of Byfron is available!
-	IfMsgBox Yes
-		Run, https://github.com/Escuminac/byfron-td
-}
-Return
-
-; disables and activates parts of gui during playback
-byf_activeGui() {
-	Control, TabLeft , 1, SysTabControl321,
-	GuiControl, Disable, Edit1
-	GuiControl, Disable, Edit2
-	GuiControl, Disable, Edit3
-	GuiControl, Disable, msctls_dropdown321
-	GuiControl, Disable, Button4
-	GuiControl, Disable, Button5
-	GuiControl, Disable, Button6
-	GuiControl, Disable, Button7
-	GuiControl, Disable, Button8
-	GuiControl, Disable, Button9
-	GuiControl, Disable, Button10
-	GuiControl, Disable, Button11
-	GuiControl, Disable, Button12
-	GuiControl, Disable, ComboBox1
-}
-
-; checks if user has changed any settings, reloading if true
-byf_reloadGui() {
-	Gui Submit, NoHide
-	; checks if any global variable is different from the one in "config.ini", reloading the script if true
-	globalVarsToCheck := ["webhooksScreenshots", "GuiTheme", "webhooksEnabled", "alwaysOnTop", "chosenWave"]
-	For each, globalName in globalVarsToCheck {
-		keyToCheck := "settings_" globalName
-		globalValue := %globalName%
-		IniRead, valueToCompare, %A_ScriptDir%\settings\config.ini, Preferences, %keyToCheck%
-		If (valueToCompare != globalValue)  {
-			MsgBox, 0, byfron, Restarting macro to use new setting "%globalValue%" for  "%globalName%"
-			byf_updateConfig()
-			Reload
-		} 
-		
-	}
-	byf_activeGui()
-}
-
-; functions
+; playback functions
 
 ;initial amount of crackers
 byf_startReport() {
-	hBitmap := HBitmapFromScreen(42,668,291,600)
-	pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
-	DllCall("DeleteObject", "Ptr", hBitmap)
-	pastCrackers := Round(ocr(pIRandomAccessStream, "en"), 1)
+	Try {
+		hBitmap := HBitmapFromScreen(42,668,291,600)
+		pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
+		DllCall("DeleteObject", "Ptr", hBitmap)
+		pastCrackers := Round(ocr(pIRandomAccessStream, "en"), 1)
+	}
 	byf_statusLog("**Startup**\nCurrent Crackers: " pastCrackers " crackers")
 }
 
 ;manages hourly
 byf_manageReport() {
-	If (A_Min == 58) or (A_Min == 59) or (A_Min == 57){
+	If (A_Min == 58) || (A_Min == 59) || (A_Min == 57) {
 		hourlySent := 0
 	}
 	If (hourlySent) {
 		Return
 	}
-	If (A_Min == 00) or (A_Min == 01) {
+	If (A_Min == 00) || (A_Min == 01) {
 		; current crackers
-		hBitmap := HBitmapFromScreen(42,668,291,600)
-		pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
-		DllCall("DeleteObject", "Ptr", hBitmap)
-		nowCrackers := Round(ocr(pIRandomAccessStream, "en"), 1)
-		hourCrackers := (nowCrackers  - pastCrackers)
+		Try {
+			hBitmap := HBitmapFromScreen(42,668,291,600)
+			pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
+			DllCall("DeleteObject", "Ptr", hBitmap)
+			hourCrackers := Round(((ocr(pIRandomAccessStream, "en")) - pastCrackers), 1)
+			pastCrackers := Round((pastCrackers + hourCrackers), 1) ; new base crackers
+		}
 		byf_statusLog("**Hourly Crackers**\nCrackers Earned: " hourCrackers)
 		hourlySent := 1
-		; new base crackers
-		pastCrackers := nowCrackers
 	}
 }
 
-
+; this game is so resource intensive
 byf_restComputer() {
 	byf_statusLog("Resting Computer - 10 minutes")
 	PostMessage, 0x0112, 0xF060,,, ahk_exe RobloxPlayerBeta.exe
-	Sleep, 690000
+	Sleep, 699999
 	byf_statusLog("Resting period complete")
 	byf_reconnect()
 }
@@ -325,7 +336,6 @@ byf_reconnect() {
 		Switch A_Index {
 		Case 1,2,3,4,5,6,7,8,9,10:
 			Run, %privateServerLink%
-
 		Case 11,12,13:
 			Run, https://www.roblox.com/games/5607971791?privateServerLinkCode=54397873328437975393589031030159
 		Case 14,15,16:
@@ -342,7 +352,7 @@ byf_reconnect() {
 				WinActivate, ahk_exe RobloxPlayerBeta.exe
 				If (byf_CheckConnection(false)) {
 					byf_screenAndSend()
-					byf_statusLog("Reconnection Confirmed" %A_Index%)
+					byf_statusLog("Reconnection Confirmed, waiting 45 seconds")
 					Sleep, 45000
 					WinActivate, ahk_exe RobloxPlayerBeta.exe
 					Send v
@@ -361,8 +371,6 @@ byf_reconnect() {
 						Click, Left
 						Sleep, 2000
 					} 
-					byf_closeMenus()
-					Sleep, 2500
 					Send c
 					Sleep, 2500
 					MouseMove, saveX, saveY, 8
@@ -385,7 +393,8 @@ byf_reconnect() {
 				} 
 			}
 		}
-	}	
+	}
+	Return byf_reconnect()	
 }
 
 ;clicks error buttons
@@ -394,8 +403,8 @@ byf_clickError() {
 	If (ErrorLevel == 0) {
 		MouseMove, erroryesX, erroryesY
 		Loop, 5 {
-		Click, Left
-		Sleep, 500
+			Click, Left
+			Sleep, 500
 		}
 		
 	}
@@ -403,8 +412,8 @@ byf_clickError() {
 	If (ErrorLevel == 0) {
 		MouseMove, errorokX, errorokY
 		Loop, 5 {
-		Click, Left
-		Sleep, 500
+			Click, Left
+			Sleep, 500
 		}
 	}
 }
@@ -447,6 +456,16 @@ byf_openCrateCF() {
 	If !(openCrates) {
 		Return
 	}
+	Try {
+		hBitmap := HBitmapFromScreen(42,668,291,600)
+		pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
+		DllCall("DeleteObject", "Ptr", hBitmap)
+		openBox:= (Round(ocr(pIRandomAccessStream, "en"), 1)) > 150 ? 1 : 0
+	}
+	If !(openBox) {
+		Return
+	}
+	MsgBox % openBox
 	Send z
 	Sleep, 2000
 	MouseMove, saveX, saveY
@@ -486,7 +505,7 @@ byf_statusLog(status) {
   "embeds": [
     {
       "description": "%status% [%A_Hour%:%A_Min%:%A_Sec%]",
-      "color": 8280002
+      "color": 8280002 
       
      
         
@@ -505,7 +524,7 @@ byf_statusLog(status) {
 
 ; sends a screenshot of your screen to the webhook
 byf_screenAndSend() {
-	If !(webhooksScreenshots) or !(webhooksEnabled) {
+	If !(webhooksScreenshots) || !(webhooksEnabled) {
 		Return
 	}
 	Try {
@@ -525,6 +544,7 @@ byf_farmWaves() {
 		byf_manageReport()
 		byf_checkConnection()
 		byf_startWave()
+		byf_openCrateCF()
 	}
 	byf_statusLog("Farming Ended")
 }
@@ -580,19 +600,6 @@ byf_startWave() {
 	}		
 }
 
-;uhm future failsafe... tbd
-byf_failClick() {
-	MouseMove, 883, 329, 2
-	Click, Left
-	Sleep, 30
-	Loop, 5 {
-		Click, Left
-		Sleep, 65
-		}
-	MouseMove, 1000, 300, 0
-	Sleep, 100
-}
-
 ; closes menu if open
 byf_closeMenus() {
 	Sleep, 500
@@ -603,6 +610,7 @@ byf_closeMenus() {
 
 ; calculates hourly crackers, based on time spent on a specific wave
 byf_hourlyStats() {
+	byf_activeGui()
 	WinActivate, Roblox ahk_exe RobloxPlayerBeta.exe
 	Loop, 10 {
 		Send, b
@@ -615,6 +623,9 @@ byf_hourlyStats() {
 			byf_statusLog("Wave " chosenWave " started")
 			Sleep, 3600
 			Break
+		} else {
+			Send, b
+			Sleep, 100
 		}
 	}
 	Loop, 6969 {
@@ -627,7 +638,7 @@ byf_hourlyStats() {
 		}
 	} 
 	EnvSub, hourlyEnd, hourlyStart, Seconds
-	hourlyEnd -= 0.3
+	hourlyEnd := Round(hourlyEnd, 1)
 	wavesHour := Round(3600 / hourlyEnd)
 	modifiersCrackers := 1
 	if (robloxPremium) {
@@ -636,13 +647,14 @@ byf_hourlyStats() {
 	if (robloxCrackersGamepass) {
 		modifiersCrackers *= 1.5
 	}
-	crackersPerWave := {20: 0.73, 21: 0.8, 22: 0.88, 23: 0.97, 24: 1.07, 25:1.18, 26: 1.3, 27: 1.43, 28: 1.57, 29: 1.73, 30: 1.9}
+	crackersPerWave := {20: 0.73, 21: 0.8, 22: 0.88, 23: 0.97, 24: 1.07, 25:1.18, 26: 1.3, 27: 1.43, 28: 1.57, 29: 1.64, 30: 1.83}
 	wavesCracker := crackersPerWave[chosenWave]
-	crackersHour := ((wavesHour * wavesCracker) * modifiersCrackers)
+	crackersHour := Round((wavesHour * wavesCracker) * modifiersCrackers)
 	byf_statusLog("**Theoretical Hourly Crackers**\nTotal Hourly: " crackersHour "\nWave " chosenWave " in " hourlyEnd " seconds")
-	byf_statusLog("This number does not compensate for loading times, delays, disconnects, etc.")
+	byf_statusLog("*This number does not compensate for loading times, delays, disconnects, etc.*")
 	SB_SetText("Status: Hourly stats finished")
-	MsgBox Hourly Crackers: %crackersHour% `nTime: %hourlyEnd%
+	MsgBox, 0, byfron, Hourly Crackers: %crackersHour% `nTime: %hourlyEnd%, 12
+	SB_SetText("Status: Idle")
 }
 
 ; releases all held keys / mouse
@@ -834,7 +846,6 @@ $F1::
 {
 	Start:
 	Critical, Off
-	FileDelete, %A_ScriptDir%\crackers.png
 	WinSet, Transparent, 100, byfron
 	byf_checkConnection()
 	MouseMove, 1000, 300, 8
@@ -844,11 +855,8 @@ $F1::
 	byf_releaseAll()
 	byf_startReport()
 	Loop, {
-		Loop, 80 {
-			Loop, 2 {
-				byf_farmWaves()
-			}
-			byf_openCrateCF()
+		Loop, 75 {
+			byf_farmWaves()
 		}
 		byf_restComputer()
 	}
@@ -897,33 +905,32 @@ $F4::
 ;gui close
 GuiClose:
 GuiEscape:
-MsgBox, 0, byfron, Macro sucessfully closed, 2
 ExitApp
 
 ;gets the mouse coordinates of some stuff
 FirstTime:
 MsgBox, 0, byfron, Please position your mouse on the specified menu buttons:, 12
 MsgBox, 0, byfron, Position your mouse on your preferred save to load in 10 seconds:, 2
-Sleep, 7000
+Sleep, 8000
 Click, Left
 MouseGetPos, saveX, saveY
 MsgBox, 0, byfron, Position your mouse on the carbon fiber lunchbox in the shop in 10 seconds:, 2
-Sleep, 7000
+Sleep, 8000
 Click, Left
 MouseGetPos, carbonX, carbonY
 byf_updateConfig()
-MsgBox, 0, byfron, Complete!
+MsgBox, 0, byfron, Complete!, 5
 Reload
 
 ;enableds/disables opening crates, and displays info
 OpenCrateMenu:
 If !(openCrates) {
-	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nEnable?
+	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nEnable?, 10
 	IfMsgBox Yes 
 		openCrates := 1
 		byf_updateConfig()
 } else {
-	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nDisable?
+	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nDisable?, 10
 	IfMsgBox Yes 
 		openCrates := 0
 		byf_updateConfig()
@@ -937,23 +944,25 @@ Return
 
 ;opens README.md
 ReadMe:
-MsgBox, 4, byfron, Open README.md?
+MsgBox, 4, byfron, Open README.md?, 10
 IfMsgBox Yes 
 	Run, % "explorer.exe /e`, /n`, /select` /open` ," A_ScriptDir "\README.md"
 Return
 
 ;opens changes.md
 ChangeLog:
-MsgBox, 4, byfron, Open changes.md?
+MsgBox, 4, byfron, Open changes.md?, 10
 IfMsgBox Yes 
 	Run, % "explorer.exe /e`, /n`, /select` /open` ," A_ScriptDir "\changes.md"
 Return
 
 ;deletes config.ini and makes a new one
 ResetConfiguration:
-MsgBox, 4, byfron, Reset all settings?
+MsgBox, 4, byfron, Reset all settings?, 10
 IfMsgBox No
 	Return 
+IfMsgBox Timeout
+	Return
 Else {
 	FileDelete, %A_ScriptDir%\settings\config.ini
 	webhookLink := "DiscordWebhook:"
