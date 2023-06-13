@@ -866,7 +866,7 @@ $F1::
 		byf_farmWaves()
 	}
 	byf_restComputer()
-	goto, loopmain:
+	goto, loopmain
 }
 
 
