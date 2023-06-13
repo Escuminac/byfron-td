@@ -155,7 +155,7 @@ Return
 ; compares byfron version
 byf_checkVersion() {
 	;https://www.autohotkey.com/boards/viewtopic.php?t=57994
-	FileRead, currentVersion, %A_ScriptDir%\version.txt
+	FileRead, currentVersion, %A_ScriptDir%\settings\version.txt
 	Try, {
 		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 		whr.Open("GET", "https://raw.githubusercontent.com/Escuminac/byfron-td/main/settings/version.txt", true)
