@@ -283,6 +283,7 @@ byf_startReport() {
 		pastCrackers := Round(ocr(pIRandomAccessStream, "en"), 1)
 	}
 	byf_statusLog("**Startup**\nCurrent Crackers: " pastCrackers " crackers")
+	Return
 }
 
 ;manages hourly
@@ -305,6 +306,7 @@ byf_manageReport() {
 		byf_statusLog("**Hourly Crackers**\nCrackers Earned: " hourCrackers)
 		hourlySent := 1
 	}
+	Return
 }
 
 ; this game is so resource intensive
@@ -314,6 +316,7 @@ byf_restComputer() {
 	Sleep, 699999
 	byf_statusLog("Resting period complete")
 	byf_reconnect()
+	Return
 }
 
 ; Reconnects when disconnected to your private server, or a public server after 5 attempts
@@ -394,7 +397,7 @@ byf_reconnect() {
 			}
 		}
 	}
-	Return byf_reconnect()	
+	Return 
 }
 
 ;clicks error buttons
@@ -490,6 +493,7 @@ byf_openCrateCF() {
 	byf_screenAndSend()
 	byf_statusLog("Lunchbox opened")
 	byf_closeMenus()
+	Return
 
 }
 
@@ -520,6 +524,7 @@ byf_statusLog(status) {
 		WebRequest.SetRequestHeader("Content-Type", "application/json")
 		WebRequest.Send(postdata)
 	}
+	Return
 }
 
 ; sends a screenshot of your screen to the webhook
@@ -548,6 +553,7 @@ byf_farmWaves() {
 	}
 	byf_openCrateCF()
 	byf_statusLog("Farming Ended")
+	Return
 }
 
 ; starts the chosen wave bro this took too long
@@ -855,12 +861,12 @@ $F1::
 	byf_checkConnection()
 	byf_releaseAll()
 	byf_startReport()
-	Loop, {
-		Loop, 75 {
-			byf_farmWaves()
-		}
-		byf_restComputer()
+	loopmain:
+	Loop, 75 {
+		byf_farmWaves()
 	}
+	byf_restComputer()
+	goto, loopmain:
 }
 
 
