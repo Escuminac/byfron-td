@@ -1,4 +1,4 @@
-﻿; Toy Defense (Glacid) macro by Escuminac#1856
+; Toy Defense (Glacid) macro by Escuminac#1856
 ; byfron v1.05
 
 ; if you're reading this, you probably understand AHK, i also need a partner to collaborate lol
@@ -527,6 +527,14 @@ byf_statusLog(status) {
 	Return
 }
 
+; main playback loop
+byf_mainLoop() {
+	Loop, 75 {
+		byf_farmWaves()
+	}
+	byf_restComputer()
+}
+
 ; sends a screenshot of your screen to the webhook
 byf_screenAndSend() {
 	If !(webhooksScreenshots) || !(webhooksEnabled) {
@@ -861,12 +869,9 @@ $F1::
 	byf_checkConnection()
 	byf_releaseAll()
 	byf_startReport()
-	loopmain:
-	Loop, 75 {
-		byf_farmWaves()
+	Loop, {
+		byf_mainLoop()
 	}
-	byf_restComputer()
-	goto, loopmain
 }
 
 
