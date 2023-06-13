@@ -465,7 +465,7 @@ byf_openCrateCF() {
 	If !(openBox) {
 		Return
 	}
-	StatusLog("Opening Carbon fiber crate")
+	byf_statusLog("Opening Carbon fiber crate")
 	Send z
 	Sleep, 2000
 	MouseMove, saveX, saveY
