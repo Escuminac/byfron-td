@@ -465,7 +465,6 @@ byf_openCrateCF() {
 	If !(openBox) {
 		Return
 	}
-	MsgBox % openBox
 	Send z
 	Sleep, 2000
 	MouseMove, saveX, saveY
