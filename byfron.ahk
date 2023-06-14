@@ -294,14 +294,14 @@ byf_manageReport() {
 	If (hourlySent) {
 		Return
 	}
-	If (A_Min == 00) || (A_Min == 01) {
+	If (A_Min == 09) || (A_Min == 01) {
 		; current crackers
 		Try {
 			hBitmap := HBitmapFromScreen(42,668,291,600)
 			pIRandomAccessStream := HBitmapToRandomAccessStream(hBitmap)
 			DllCall("DeleteObject", "Ptr", hBitmap)
-			hourCrackers := Round(((ocr(pIRandomAccessStream, "en")) - pastCrackers), 1)
-			pastCrackers := Round((pastCrackers + hourCrackers), 1) ; new base crackers
+			hourCrackers := ocr(pIRandomAccessStream, "en")
+			hourCrackers -= pastCrackers
 		}
 		byf_statusLog("**Hourly Crackers**\nCrackers Earned: " hourCrackers)
 		hourlySent := 1
@@ -337,13 +337,13 @@ byf_reconnect() {
 		byf_clickError()
 		Sleep, 1690
 		Switch A_Index {
-		Case 1,2,3,4,5,6,7,8,9,10:
+			Case 1,2,3,4,5,6,7,8,9,10:
 			Run, %privateServerLink%
-		Case 11,12,13:
+			Case 11,12,13:
 			Run, https://www.roblox.com/games/5607971791?privateServerLinkCode=54397873328437975393589031030159
-		Case 14,15,16:
+			Case 14,15,16:
 			Run, https://www.roblox.com/games/5607971791?privateServerLinkCode=36698095266676358438022701075605
-		Default:		
+			Default:		
 			Run, https://www.roblox.com/games/5607971791?privateServerLinkCode=86576672776104755661966528358833 
 		}
 		Sleep, 1420
@@ -351,54 +351,63 @@ byf_reconnect() {
 		Loop, 400 {
 			byf_clickError()
 			Sleep, 500
-			If WinExist("ahk_exe RobloxPlayerBeta.exe") {
-				WinActivate, ahk_exe RobloxPlayerBeta.exe
-				If (byf_CheckConnection(false)) {
-					byf_screenAndSend()
-					byf_statusLog("Reconnection Confirmed, waiting 45 seconds")
-					Sleep, 45000
-					WinActivate, ahk_exe RobloxPlayerBeta.exe
-					Send v
-					Sleep, 2500
-					ImageSearch, redX, redY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\redteam.png
-					If (ErrorLevel == 0) {
-						MouseMove, redX, redY, 8
-						Click, Left
-						Sleep, 2000
-					} else {
-						Return byf_reconnect()
-					}
-					ImageSearch, joinTeamX, joinTeamY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\jointeam.png
-					If (ErrorLevel == 0) {
-						MouseMove, joinTeamX, joinTeamY, 8
-						Click, Left
-						Sleep, 2000
-					} 
-					Send c
-					Sleep, 2500
-					MouseMove, saveX, saveY, 8
-					Click, Left
-					Sleep, 2000
-					ImageSearch, loadsavesX, loadsavesY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\loadsave.png
-					If (ErrorLevel == 0) {
-						MouseMove, loadsavesX, loadsavesY, 8
-						Click, Left
-						Sleep, 2000
-					} else {
-						Return byf_reconnect()
-					}
-					byf_closeMenus()
-					byf_statusLog("Reconnection finished")
-					byf_screenAndSend()
-					MouseMove, 1000, 300, 8
-					Send {Text} /:weary: byfron pro [%A_Hour%:%A_Min%] `n
-					Return 	
-				} 
+			If !WinExist("ahk_exe RobloxPlayerBeta.exe") {
+				Continue
 			}
+			WinActivate, ahk_exe RobloxPlayerBeta.exe
+			If (byf_CheckConnection(false)) {
+				byf_screenAndSend()
+				byf_statusLog("Reconnection Confirmed, waiting 45 seconds")
+				Sleep, 45000
+				If (byf_reconnectLoad()) {
+					Return
+				}
+			} 
 		}
 	}
 	Return 
 }
+
+byf_reconnectLoad() {
+	WinActivate, ahk_exe RobloxPlayerBeta.exe
+	Send v
+	Sleep, 2500
+	ImageSearch, redX, redY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\redteam.png
+	If (ErrorLevel == 0) {
+		MouseMove, redX, redY, 8
+		Click, Left
+		Sleep, 2000
+	} else {
+		Return byf_reconnect()
+	}
+	ImageSearch, joinTeamX, joinTeamY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\jointeam.png
+	If (ErrorLevel == 0) {
+		MouseMove, joinTeamX, joinTeamY, 8
+		Click, Left
+		Sleep, 2000
+	} 
+	Send c
+	Sleep, 2500
+	MouseMove, saveX, saveY, 8
+	Click, Left
+	Sleep, 2000
+	ImageSearch, loadsavesX, loadsavesY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\settings\images\loadsave.png
+	If (ErrorLevel == 0) {
+		MouseMove, loadsavesX, loadsavesY, 8
+		Click, Left
+		Sleep, 2000
+	} else {
+		Return byf_reconnect()
+	}
+	byf_closeMenus()
+	byf_statusLog("Reconnection finished")
+	byf_screenAndSend()
+	MouseMove, 1000, 300, 8
+	Send {Text} /:weary: byfron pro [%A_Hour%:%A_Min%] `n
+	Return 	True
+	
+}
+
 
 ;clicks error buttons
 byf_clickError() {
@@ -494,7 +503,7 @@ byf_openCrateCF() {
 	byf_statusLog("Lunchbox opened")
 	byf_closeMenus()
 	Return
-
+	
 }
 
 ; logs the status to your webhook and updates the Gui statusbar
@@ -700,10 +709,10 @@ byf_exit() {
 
 ;https://www.autohotkey.com/board/topic/30042-run-ahk-scripts-with-less-half-or-even-less-memory-usage/
 EmptyMem(PID="AHK Rocks"){
-    pid:=(pid="AHK Rocks") ? DllCall("GetCurrentProcessId") : pid
-    h:=DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", 0, "Int", pid)
-    DllCall("SetProcessWorkingSetSize", "UInt", h, "Int", -1, "Int", -1)
-    DllCall("CloseHandle", "Int", h)
+	pid:=(pid="AHK Rocks") ? DllCall("GetCurrentProcessId") : pid
+	h:=DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", 0, "Int", pid)
+	DllCall("SetProcessWorkingSetSize", "UInt", h, "Int", -1, "Int", -1)
+	DllCall("CloseHandle", "Int", h)
 }
 
 ; by zez i think
@@ -733,14 +742,14 @@ SkinForm(Param1 := "Apply", DLL := "", SkinName := ""){
 ;ninju screenshotter functions
 Screenshot(outfile) {
 	Try {
-    pToken := Gdip_Startup()
-
-    screen=0|0|%A_ScreenWidth%|%A_ScreenHeight%
-    pBitmap := Gdip_BitmapFromScreen(screen)
-
-    Gdip_SaveBitmapToFile(pBitmap, outfile, 100)
-    Gdip_DisposeImage(pBitmap)
-    Gdip_Shutdown(pToken)
+		pToken := Gdip_Startup()
+		
+		screen=0|0|%A_ScreenWidth%|%A_ScreenHeight%
+		pBitmap := Gdip_BitmapFromScreen(screen)
+		
+		Gdip_SaveBitmapToFile(pBitmap, outfile, 100)
+		Gdip_DisposeImage(pBitmap)
+		Gdip_Shutdown(pToken)
 	}
 }
 
@@ -775,17 +784,17 @@ CreateFormData(ByRef retData, ByRef retHeader, objParam) {
 }
 
 Class CreateFormData {
-
+	
 	__New(ByRef retData, ByRef retHeader, objParam) {
-
+		
 		Local CRLF := "`r`n", i, k, v, str, pvData
 		; Create a random Boundary
 		Local Boundary := this.RandomBoundary()
 		Local BoundaryLine := "------------------------------" . Boundary
-
-    this.Len := 0 ; GMEM_ZEROINIT|GMEM_FIXED = 0x40
-    this.Ptr := DllCall( "GlobalAlloc", "UInt",0x40, "UInt",1, "Ptr"  )          ; allocate global memory
-
+		
+		this.Len := 0 ; GMEM_ZEROINIT|GMEM_FIXED = 0x40
+		this.Ptr := DllCall( "GlobalAlloc", "UInt",0x40, "UInt",1, "Ptr"  )          ; allocate global memory
+		
 		; Loop input paramters
 		For k, v in objParam
 		{
@@ -795,52 +804,52 @@ Class CreateFormData {
 					str := BoundaryLine . CRLF
 					     . "Content-Disposition: form-data; name=""" . k . """; filename=""" . FileName . """" . CRLF
 					     . "Content-Type: " . this.MimeType(FileName) . CRLF . CRLF
-          this.StrPutUTF8( str )
-          this.LoadFromFile( Filename )
-          this.StrPutUTF8( CRLF )
+					this.StrPutUTF8( str )
+					this.LoadFromFile( Filename )
+					this.StrPutUTF8( CRLF )
 				}
 			} Else {
 				str := BoundaryLine . CRLF
 				     . "Content-Disposition: form-data; name=""" . k """" . CRLF . CRLF
 				     . v . CRLF
-        this.StrPutUTF8( str )
+				this.StrPutUTF8( str )
 			}
 		}
-
+		
 		this.StrPutUTF8( BoundaryLine . "--" . CRLF )
-
+		
     ; Create a bytearray and copy data in to it.
-    retData := ComObjArray( 0x11, this.Len ) ; Create SAFEARRAY = VT_ARRAY|VT_UI1
-    pvData  := NumGet( ComObjValue( retData ) + 8 + A_PtrSize )
-    DllCall( "RtlMoveMemory", "Ptr",pvData, "Ptr",this.Ptr, "Ptr",this.Len )
-
-    this.Ptr := DllCall( "GlobalFree", "Ptr",this.Ptr, "Ptr" )                   ; free global memory
-
-    retHeader := "multipart/form-data; boundary=----------------------------" . Boundary
+		retData := ComObjArray( 0x11, this.Len ) ; Create SAFEARRAY = VT_ARRAY|VT_UI1
+		pvData  := NumGet( ComObjValue( retData ) + 8 + A_PtrSize )
+		DllCall( "RtlMoveMemory", "Ptr",pvData, "Ptr",this.Ptr, "Ptr",this.Len )
+		
+		this.Ptr := DllCall( "GlobalFree", "Ptr",this.Ptr, "Ptr" )                   ; free global memory
+		
+		retHeader := "multipart/form-data; boundary=----------------------------" . Boundary
 	}
-
-  StrPutUTF8( str ) {
-    Local ReqSz := StrPut( str, "utf-8" ) - 1
-    this.Len += ReqSz                                  ; GMEM_ZEROINIT|GMEM_MOVEABLE = 0x42
-    this.Ptr := DllCall( "GlobalReAlloc", "Ptr",this.Ptr, "UInt",this.len + 1, "UInt", 0x42 )
-    StrPut( str, this.Ptr + this.len - ReqSz, ReqSz, "utf-8" )
-  }
-
-  LoadFromFile( Filename ) {
-    Local objFile := FileOpen( FileName, "r" )
-    this.Len += objFile.Length                     ; GMEM_ZEROINIT|GMEM_MOVEABLE = 0x42
-    this.Ptr := DllCall( "GlobalReAlloc", "Ptr",this.Ptr, "UInt",this.len, "UInt", 0x42 )
-    objFile.RawRead( this.Ptr + this.Len - objFile.length, objFile.length )
-    objFile.Close()
-  }
-
+	
+	StrPutUTF8( str ) {
+		Local ReqSz := StrPut( str, "utf-8" ) - 1
+		this.Len += ReqSz                                  ; GMEM_ZEROINIT|GMEM_MOVEABLE = 0x42
+		this.Ptr := DllCall( "GlobalReAlloc", "Ptr",this.Ptr, "UInt",this.len + 1, "UInt", 0x42 )
+		StrPut( str, this.Ptr + this.len - ReqSz, ReqSz, "utf-8" )
+	}
+	
+	LoadFromFile( Filename ) {
+		Local objFile := FileOpen( FileName, "r" )
+		this.Len += objFile.Length                     ; GMEM_ZEROINIT|GMEM_MOVEABLE = 0x42
+		this.Ptr := DllCall( "GlobalReAlloc", "Ptr",this.Ptr, "UInt",this.len, "UInt", 0x42 )
+		objFile.RawRead( this.Ptr + this.Len - objFile.length, objFile.length )
+		objFile.Close()
+	}
+	
 	RandomBoundary() {
 		str := "0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z"
 		Sort, str, D| Random
 		str := StrReplace(str, "|")
 		Return SubStr(str, 1, 12)
 	}
-
+	
 	MimeType(FileName) {
 		n := FileOpen(FileName, "r").ReadUInt()
 		Return (n        = 0x474E5089) ? "image/png"
@@ -851,7 +860,7 @@ Class CreateFormData {
 		     : (n&0xFFFF = 0x4D4D    ) ? "image/tiff"
 		     : "application/octet-stream"
 	}
-
+	
 }
 
 ; hotkeys
@@ -940,12 +949,12 @@ If !(openCrates) {
 	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nEnable?, 10
 	IfMsgBox Yes 
 		openCrates := 1
-		byf_updateConfig()
+	byf_updateConfig()
 } else {
 	MsgBox, 4, byfron, Description: `nOpens your chosen lunchbox ~ every 12 minutes if possible`n`nDisable?, 10
 	IfMsgBox Yes 
 		openCrates := 0
-		byf_updateConfig()
+	byf_updateConfig()
 }
 Return
 
