@@ -294,7 +294,7 @@ byf_manageReport() {
 	If (hourlySent) {
 		Return
 	}
-	If (A_Min == 09) || (A_Min == 01) {
+	If (A_Min == 00) || (A_Min == 01) {
 		; current crackers
 		Try {
 			hBitmap := HBitmapFromScreen(42,668,291,600)
